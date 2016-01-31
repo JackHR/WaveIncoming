@@ -1,139 +1,149 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+public enum ClassType { Assault, Tank, Sniper };
+
 public class PlayerStats : MonoBehaviour {
 
-	public static string SelectedClass = "Assault";
+	[SerializeField]
+	private ClassType classType;
+	
+	public PlayerNumber PlayerNumber { get { return playerNumber; } }
+	[SerializeField]
+	private PlayerNumber playerNumber;
 
-	public static ClassStats PlayerClass = new ClassStats ("Assault");
-	public static int PlayerMoney = 0;
-	
-	public static Vector3 PlayerPosition;
-	public static GameObject PlayerInstance;
-	
-	public static void AdjustMoney (int amount) {
-		PlayerMoney += amount;
-		CombatText.SpawnCombatText (PlayerPosition, amount, CombatText.CombatTextType.money);
-	}
-	
-	public static void ResetPlayer () {
-		//Debug.Log (SelectedClass);
-	
-		PlayerMoney = 0;
-		PlayerClass = new ClassStats (SelectedClass);
-		
-		playerHealth = PlayerClass.vitality;
-		playerAgility = PlayerClass.agility;
-		playerVitality = PlayerClass.vitality;
-		playerAccuracy = PlayerClass.acuracy;
-		
-		playerDamage = PlayerClass.weaponStat.damage;
-		playerFireRate = PlayerClass.weaponStat.firerate;
-		playerCritChance = PlayerClass.weaponStat.critChance;
-		playerClipSize = PlayerClass.weaponStat.clipSize;
-		playerReloadTime = PlayerClass.weaponStat.reloadTime;
-	}
-	
-	void Awake () {
-		ResetPlayer ();
+	public ClassType Class { 
+		get { return classType; } 
 	}
 
-	// CLASS STUFF
-	
-	private static int _health = playerVitality;
-	public static int playerHealth {
-		get {
-			return ( _health ); 
-		}
-		set {
-			_health = Mathf.Clamp (value, 0, playerVitality);
-		}
+	public Vector3 Position {
+		get { return position; }
+		set { position = value; }
+	}
+
+	public int Money {
+		get { return money; }
+		set { money = value; }
+	}
+
+	public int Health {
+		get { return health; }
+		set { health = Mathf.Clamp(value, 0, classStats.vitality); }
+	}
+
+	public int Vitality {
+		get { return classStats.vitality; }
+		set { classStats.vitality = value; }
+	}
+
+	public float Speed {
+		get { return (2f + classStats.agility / 30); }
+	}
+
+	public float AimOffset {
+		get { return ( (1f/(float)classStats.accuracy) * 8f ); }
+	}
+
+	public int Agility {
+		get { return classStats.agility; }
+		set { classStats.agility = Mathf.Clamp (value, 0, 220); }
+	}
+
+	public int Accuracy {
+		get { return classStats.accuracy; }
+		set { classStats.accuracy = value; }
+	}
+
+	public int Damage {
+		get { return ( classStats.weaponStat.damage ); }
+		set { classStats.weaponStat.damage = value; }
 	}
 	
-	public static float playerSpeed {
-		get {
-			return ( 2f + PlayerClass.agility/30 ); 
-		}
+	public int FireRate {
+		get { return classStats.weaponStat.firerate; }
+		set { classStats.weaponStat.firerate = value; }
 	}
 	
-	public static float playerAimOffset {
-		get {
-			return ( (1f/(float)PlayerClass.acuracy) * 8f ); 
-		}
+	public int CritChance {
+		get { return ( classStats.weaponStat.critChance ); }
+		set { classStats.weaponStat.critChance = Mathf.Clamp (value, 0, 100); }
 	}
 	
-	public static int playerAgility {
-		get {
-			return ( PlayerClass.agility ); 
-		}
-		set {
-			PlayerClass.agility = Mathf.Clamp (value, 0, 220);
-		}
+	public int ClipSize {
+		get { return classStats.weaponStat.clipSize; }
+		set { classStats.weaponStat.clipSize = value; }
 	}
 	
-	public static int playerVitality {
-		get {
-			return ( PlayerClass.vitality ); 
-		}
-		set {
-			PlayerClass.vitality = value;
+	public float ReloadTime {
+		get { return classStats.weaponStat.reloadTime; }
+		set { classStats.weaponStat.reloadTime = value; }
+	}
+
+	public Transform deathParticle;
+
+	private int health;
+	private ClassStats classStats;
+	private int money = 0;
+	private Vector3 position;
+
+	[SerializeField]
+	private float healthRegenRate = 1f;
+	private float healthRegenDelay;
+	private float lastRegen = 0f;
+
+	private void Awake() {
+		ResetPlayer();
+		healthRegenDelay = 1f / healthRegenRate;
+	}
+
+	private void Update () {
+		if (Time.time > lastRegen + healthRegenDelay && Health < Vitality) {
+			Health += 5;
+			CombatText.SpawnCombatText (Position, 5, CombatText.CombatTextType.heal);
+			lastRegen = Time.time;
 		}
 	}
-	
-	public static int playerAccuracy {
-		get {
-			return ( PlayerClass.acuracy ); 
-		}
-		set {
-			PlayerClass.acuracy = value;
+
+	public void AdjustMoney (int amount) {
+		money += amount;
+		CombatText.SpawnCombatText(position, amount, CombatText.CombatTextType.money);
+	}
+
+	public void ResetPlayer() {
+		money = 100;
+		classStats = new ClassStats(classType);
+
+		Health = classStats.vitality;
+		Agility = classStats.agility;
+		Vitality = classStats.vitality;
+		Accuracy = classStats.accuracy;
+		
+		Damage = classStats.weaponStat.damage;
+		FireRate = classStats.weaponStat.firerate;
+		CritChance = classStats.weaponStat.critChance;
+		ClipSize = classStats.weaponStat.clipSize;
+		ReloadTime = classStats.weaponStat.reloadTime;
+	}
+
+	public void AdjustPlayerHealth (int adj) {
+		Health += adj;
+		
+		CombatText.SpawnCombatText (Position, adj, CombatText.CombatTextType.damage);
+		
+		if (Health <= 0) {
+			StartCoroutine ("KillPlayer");
 		}
 	}
-	
-	
-	// WEAPON STUFF
-	
-	public static int playerDamage {
-		get {
-			return ( PlayerClass.weaponStat.damage ); 
-		}
-		set {
-			PlayerClass.weaponStat.damage = value;
-		}
-	}
-	
-	public static int playerFireRate {
-		get {
-			return ( PlayerClass.weaponStat.firerate ); 
-		}
-		set {
-			PlayerClass.weaponStat.firerate = value;
-		}
-	}
-	
-	public static int playerCritChance {
-		get {
-			return ( PlayerClass.weaponStat.critChance ); 
-		}
-		set {
-			PlayerClass.weaponStat.critChance = Mathf.Clamp (value, 0, 100);
-		}
-	}
-	
-	public static int playerClipSize {
-		get {
-			return ( PlayerClass.weaponStat.clipSize ); 
-		}
-		set {
-			PlayerClass.weaponStat.clipSize = value;
-		}
-	}
-	
-	public static float playerReloadTime {
-		get {
-			return ( PlayerClass.weaponStat.reloadTime ); 
-		}
-		set {
-			PlayerClass.weaponStat.reloadTime = value;
-		}
+
+	public IEnumerator KillPlayer () {
+		Instantiate (deathParticle, Position, Quaternion.identity);
+		Destroy (gameObject);
+		
+		yield return new WaitForSeconds (1f);
+		
+		float waitTime = Fade.FadeInstance.BeginFade(1);
+		yield return new WaitForSeconds (waitTime);
+		
+		Application.LoadLevel (Strings.MainMenu);
 	}
 }

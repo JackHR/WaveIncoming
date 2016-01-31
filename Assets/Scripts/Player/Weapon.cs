@@ -2,7 +2,8 @@
 using System.Collections;
 
 public class Weapon : MonoBehaviour {
-	
+
+	public PlayerNumber playerNumber;
 	public int fireRate = 0;
 	public int damage = 10;
 	public int critChance = 1;
@@ -11,7 +12,7 @@ public class Weapon : MonoBehaviour {
 	
 	private bool reloading = false;
 	
-	public static int shotsFired = 0;
+	public int shotsFired = 0;
 	
 	public float knockBack = 200f;
 	public float enemyKnockBack = 800f;
@@ -24,15 +25,24 @@ public class Weapon : MonoBehaviour {
 	public Transform HitParticlesPrefab;
 	float timeToSpawnEffect = 0;
 	public float effectSpawnRate = 10;
-	
+
+	public PlayerStats playerStats;
+
 	float timeToFire = 0;
 	Transform firePoint;
 	Rigidbody2D rb;
 	ParticleSystem ps;
-	
+	string reloadButton, fireButton;
+	Animator anim;
+
 	// Use this for initialization
 	void Awake () {
-		firePoint = transform.FindChild ("FirePoint");
+
+		anim = GetComponent<Animator>();
+
+		playerStats = transform.parent.GetComponent<PlayerStats>();
+
+		firePoint = transform.FindChild (Strings.FirePoint);
 		if (firePoint == null) {
 			Debug.LogError ("No firePoint? WHAT?!");
 		}
@@ -47,11 +57,19 @@ public class Weapon : MonoBehaviour {
 	}
 	
 	void Start () {
-		damage = PlayerStats.playerDamage;
-		fireRate = PlayerStats.playerFireRate;
-		critChance = PlayerStats.playerCritChance;
-		clipSize = PlayerStats.playerClipSize;
-		reloadTime = PlayerStats.playerReloadTime;
+		if(playerNumber == PlayerNumber.P1) {
+			reloadButton = Strings.Reload_P1;
+			fireButton = Strings.Fire_P1;
+		}
+		else {
+			reloadButton = Strings.Reload_P2;
+			fireButton = Strings.Fire_P2;
+		}
+		damage = playerStats.Damage;
+		fireRate = playerStats.FireRate;
+		critChance = playerStats.CritChance;
+		clipSize = playerStats.ClipSize;
+		reloadTime = playerStats.ReloadTime;
 		
 		shotsFired = 0;
 	}
@@ -59,21 +77,21 @@ public class Weapon : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 	
-		if (Customization.CustomizationMenuEnabled) {
-			damage = PlayerStats.playerDamage;
-			fireRate = PlayerStats.playerFireRate;
-			critChance = PlayerStats.playerCritChance;
-			clipSize = PlayerStats.playerClipSize;
-			reloadTime = PlayerStats.playerReloadTime;
+		if (Customization.MenuActive) {
+			damage = playerStats.Damage;
+			fireRate = playerStats.FireRate;
+			critChance = playerStats.CritChance;
+			clipSize = playerStats.ClipSize;
+			reloadTime = playerStats.ReloadTime;
 			
 			return;
 		}
 		
-		if (PauseMenu.PauseMenuEnabled)
+		if (PauseMenu.MenuActive)
 			return;
 	
-		if (Input.GetKeyDown (KeyCode.R)) {
-			StartCoroutine ("Reload");
+		if (Input.GetButtonDown(reloadButton) && !reloading) {
+			StartCoroutine (Strings.Reload);
 			reloading = true;
 		}
 		
@@ -81,26 +99,26 @@ public class Weapon : MonoBehaviour {
 			return;
 	
 		if (shotsFired >= clipSize) {
-			StartCoroutine ("Reload");
+			StartCoroutine (Strings.Reload);
 			ps.emissionRate = 0;
 			reloading = true;
 			return;
 		}
 	
 		if (fireRate == 0) {
-			PlayerController.PlayerAnim.SetBool ("isShooting", false);
+			anim.SetBool (Strings.IsShooting, false);
 			ps.emissionRate = 0;
-			if (Input.GetButtonDown ("Fire1")) {
+			if (Input.GetButtonDown (fireButton)) {
 				Shoot();
 				shotsFired++;
 				ps.emissionRate = 1;
-				PlayerController.PlayerAnim.SetBool ("isShooting", true);
+				anim.SetBool (Strings.IsShooting, true);
 			}
 		}
 		else {
 			ps.emissionRate = 0;
-			PlayerController.PlayerAnim.SetBool ("isShooting", false);
-			if (Input.GetButton ("Fire1")) {
+			anim.SetBool (Strings.IsShooting, false);
+			if (Input.GetButton (fireButton)) {
 				if (Time.time > timeToFire) {
 					timeToFire = Time.time + 1/(float)fireRate;
 					Shoot();
@@ -108,30 +126,21 @@ public class Weapon : MonoBehaviour {
 				}
 				
 				ps.emissionRate = fireRate;
-				PlayerController.PlayerAnim.SetBool ("isShooting", true);
+				anim.SetBool (Strings.IsShooting, true);
 			}
 		}
 	}
 	
 	void Shoot () {
-		Vector2 mousePosition = new Vector2 (Camera.main.ScreenToWorldPoint (Input.mousePosition).x, Camera.main.ScreenToWorldPoint(Input.mousePosition).y);
-		Vector2 firePointPosition = new Vector2 (firePoint.position.x, firePoint.position.y);
-		
-		Vector2 shotDir = new Vector2 ();
-		
-		if (Vector2.Distance (mousePosition, firePointPosition) > 0.5f)
-			shotDir = mousePosition - firePointPosition;
-		else
-			shotDir = firePoint.parent.up;
-		
+
+		Vector2 shotDir = firePoint.up;
 		shotDir.Normalize();
-		
-		shotDir.x += Random.Range (-PlayerStats.playerAimOffset, PlayerStats.playerAimOffset);
-		shotDir.y += Random.Range (-PlayerStats.playerAimOffset, PlayerStats.playerAimOffset);
-		
+		shotDir.x += Random.Range (-playerStats.AimOffset, playerStats.AimOffset);
+		shotDir.y += Random.Range (-playerStats.AimOffset, playerStats.AimOffset);
 		shotDir.Normalize();
-		
-		RaycastHit2D hit = Physics2D.Raycast (firePointPosition, shotDir, 100, whatToHit);
+
+		Vector2 firePointPosition = firePoint.position;
+		RaycastHit2D hit = Physics2D.Raycast (firePoint.position, shotDir, 100, whatToHit);
 		if (Time.time >= timeToSpawnEffect) {
 			if (hit.collider != null)
 				Effect (hit);
@@ -144,25 +153,29 @@ public class Weapon : MonoBehaviour {
 			Debug.DrawLine (firePointPosition, hit.point, Color.red);
 			//Debug.Log ("We hit " + hit.collider.name + " and did " + damage + " damage.");
 			
-			if (hit.collider.tag == "Enemy") {
+			if (hit.collider.tag == Strings.Enemy) {
 				EnemyMaster em = hit.collider.GetComponent<EnemyMaster>();
-				em.AdjustHealth (DoDamageCalculation());
+				em.Damage (DoDamageCalculation(), RewardCallback);
 				hit.collider.GetComponent<Rigidbody2D>().AddForce (transform.up * enemyKnockBack, ForceMode2D.Impulse);
 			}
 		}
 		
 		rb.AddRelativeForce (-transform.up * knockBack, fMode);
 	}
-	
+
+	void RewardCallback(int moneyReward) {
+		playerStats.AdjustMoney(moneyReward);
+	}
+
 	int DoDamageCalculation () {
 	
-		float dmg = PlayerStats.playerDamage;
+		float dmg = playerStats.Damage;
 	
-		float chance = Random.Range (0.1f, -0.1f) * (float)PlayerStats.playerDamage;
+		float chance = Random.Range (0.1f, -0.1f) * (float)playerStats.Damage;
 		dmg += chance;
 		
 		int crit = Random.Range (0, 101);
-		if (crit <= PlayerStats.playerCritChance)
+		if (crit <= playerStats.CritChance)
 			dmg *= Random.Range (2f, 3f);
 	
 		return -(int)dmg;

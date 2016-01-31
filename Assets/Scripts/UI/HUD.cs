@@ -5,27 +5,30 @@ using UnityEngine.UI;
 [RequireComponent(typeof(Animator))]
 public class HUD : MonoBehaviour {
 
+	public PlayerStats playerStats;
 	public Slider slider;
 	public Text bullets;
-	
-	private Animator anim;
+
+	private Animator hudAnimator;
 	private int lastHealth = 0;
+	private Weapon weapon;
 	
 	void Start () {
-		anim = GetComponent<Animator>();
+		hudAnimator = GetComponent<Animator>();
+		weapon = transform.parent.GetComponentInChildren<Weapon>();
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		slider.maxValue = PlayerStats.playerVitality;
+		slider.maxValue = playerStats.Vitality;
 	
-		if (lastHealth != PlayerStats.playerHealth) {
-			slider.value = PlayerStats.playerHealth;
-			lastHealth = PlayerStats.playerHealth;
-			anim.SetBool ("Update", true);
+		if (lastHealth != playerStats.Health) {
+			slider.value = playerStats.Health;
+			lastHealth = playerStats.Health;
+			hudAnimator.SetBool ("Update", true);
 		} else
-			anim.SetBool ("Update", false);
+			hudAnimator.SetBool ("Update", false);
 		
-		bullets.text = (PlayerStats.playerClipSize - Weapon.shotsFired).ToString();
+		bullets.text = (playerStats.ClipSize - weapon.shotsFired).ToString();
 	}
 }

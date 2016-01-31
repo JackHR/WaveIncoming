@@ -1,10 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class PauseMenu : MonoBehaviour {
-
-	public static bool PauseMenuEnabled = false;
-
+public class PauseMenu : CursorMenu {
+		
+	public static bool MenuActive = false;
 	public GameObject pauseMenu;
 	public GameObject warningDialogue;
 
@@ -12,23 +11,27 @@ public class PauseMenu : MonoBehaviour {
 
 	// Update is called once per frame
 	void Update () {
-		if (Input.GetKeyDown (KeyCode.Escape)) {
-			if (PauseMenuEnabled == true) {
-				PauseMenuEnabled = false;
-				pauseMenu.SetActive (false);
-				Time.timeScale = 1f;
-			} else {
-				PauseMenuEnabled = true;
-				pauseMenu.SetActive (true);
-				Time.timeScale = 0f;
-			}
+		if (Input.GetButtonDown(Strings.Pause_P1) && !Customization.MenuActive) {
+
+			if (MenuActive == true)
+				ToggleMenu(menuActive: false);
+
+			else
+				ToggleMenu(menuActive: true);
 		}
 	}
 	
 	public void Continue () {
-		PauseMenuEnabled = false;
-		transform.FindChild ("PauseMenu").gameObject.SetActive (false);
-		Time.timeScale = 1f;
+		ToggleMenu(menuActive: false);
+	}
+
+	protected override void ToggleMenu (bool menuActive)
+	{
+		base.ToggleMenu (menuActive);
+	
+		MenuActive = menuActive;
+		pauseMenu.SetActive(menuActive);
+		Time.timeScale = menuActive ? 0f : 1f;
 	}
 
 	public void ToggleWarningDialogue (bool isOn) {
@@ -56,8 +59,9 @@ public class PauseMenu : MonoBehaviour {
 
 		float waitTime = Fade.FadeInstance.BeginFade(1);
 		yield return new WaitForSeconds (waitTime);
-		
-		Application.LoadLevel ("MainMenu");
+
+		ToggleMenu(false);
+		Application.LoadLevel (Strings.MainMenu);
 	}
 	
 	public void AdjustVolume (float vol) {

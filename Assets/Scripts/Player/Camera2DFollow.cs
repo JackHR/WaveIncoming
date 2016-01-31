@@ -2,7 +2,6 @@ using UnityEngine;
 
 public class Camera2DFollow : MonoBehaviour
 {
-
 	public Transform target;
 	public float damping = 1;
 	public float lookAheadFactor = 3;
@@ -17,6 +16,11 @@ public class Camera2DFollow : MonoBehaviour
 	// Use this for initialization
 	private void Start()
 	{
+		if(MainMenu.SelectedGameMode == GameMode.Multiplayer) {
+			GetComponent<Camera>().orthographicSize = 6.5f;
+			this.enabled = false;
+		}
+
 		if (target == null) {
 			GameObject go = GameObject.FindGameObjectWithTag ("Player");
 			if (go != null)

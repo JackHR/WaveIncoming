@@ -7,38 +7,38 @@ public class ClassStats {
 	
 	public int vitality;
 	public int agility;
-	public int acuracy;
+	public int accuracy;
 	
 	public WeaponStats weaponStat;
 	
-	public ClassStats (string className) {
+	public ClassStats (ClassType classType) {
 	
-		if (className == "Assault") {
+		if (classType == ClassType.Assault) {
 			name = "Assault";
 			
 			vitality = 40;
 			agility = 80;
-			acuracy = 50;
+			accuracy = 50;
 			
 			weaponStat = new WeaponStats(5, 10, 7, 20, 1f);
 		}
 		
-		if (className == "Tank") {
+		if (classType == ClassType.Tank) {
 			name = "Tank";
 			
 			vitality = 110;
 			agility = 8;
-			acuracy = 90;
+			accuracy = 90;
 			
 			weaponStat = new WeaponStats(14, 4, 3, 12, 2f);
 		}
 		
-		if (className == "Sniper") {
+		if (classType == ClassType.Sniper) {
 			name = "Sniper";
 			
 			vitality = 20;
 			agility = 70;
-			acuracy = 250;
+			accuracy = 250;
 			
 			weaponStat = new WeaponStats(40, 0, 30, 6, 2f);
 		}

@@ -14,4 +14,5 @@ public class CustomCursor : MonoBehaviour {
 	void OnMouseExit () {
 		Cursor.SetCursor(null, Vector2.zero, cursorMode);
 	}
+
 }

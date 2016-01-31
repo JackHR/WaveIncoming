@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 [RequireComponent(typeof(EnemyAI))]
@@ -31,18 +31,19 @@ public class EnemyRifle : MonoBehaviour {
 			target = ai.target;
 			return;
 		}
-		
-		if (ai.inSight) {
+
+		PlayerStats playerStats;
+		if (ai.InSight(out playerStats)) {
 			if (Time.time > lastHit + 1f/fireRate) {
-				Hit ();
+				Hit (playerStats);
 				lastHit = Time.time;
 			}
 		}
 		
 	}
 	
-	void Hit () {
-		PlayerMaster.playerMaster.AdjustPlayerHealth (-damage);
+	void Hit (PlayerStats playerStats) {
+		playerStats.AdjustPlayerHealth (-damage);
 		//Debug.Log (PlayerStats.playerHealth);
 		
 		//EFFECT

@@ -35,9 +35,14 @@ public class EnemyAI : MonoBehaviour {
 
 	public float stopDist = 2f;
 	public LayerMask mask;
-	
-	public bool inSight = false;
-	
+
+	private bool inSight;
+	private PlayerStats sightedPlayer;
+	public bool InSight(out PlayerStats playerStats) {
+		playerStats = sightedPlayer;
+		return inSight && sightedPlayer != null;
+	}
+
 	private Animator anim;
 
 	public void Start () {
@@ -47,9 +52,16 @@ public class EnemyAI : MonoBehaviour {
 		rb = GetComponent<Rigidbody2D>();
 
 		if (target == null) {
-			GameObject go = GameObject.FindGameObjectWithTag ("Player");
-			if (go != null)
-				target = go.transform;
+			// get an array of players in case of two player mode
+			GameObject[] players = GameObject.FindGameObjectsWithTag ("Player");
+			// target the closest player
+			float minDistance = float.MaxValue;
+			foreach(var player in players) {
+				float distance = Vector3.Distance(transform.position, player.transform.position);
+				if(distance < minDistance) {
+					target = player.transform;
+				}
+			}
 		}
 
 		if (target == null)
@@ -135,6 +147,7 @@ public class EnemyAI : MonoBehaviour {
 			Debug.DrawLine (transform.position, hit.point);
 			
 			if (hit.collider.tag == "Player") {
+				sightedPlayer = hit.collider.transform.root.GetComponentInChildren<PlayerStats>();
 				inSight = true;
 				return;
 			}

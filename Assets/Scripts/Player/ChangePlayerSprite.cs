@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
 
@@ -9,16 +9,18 @@ public class ChangePlayerSprite : MonoBehaviour {
 	public Sprite tankSprite;
 	public Sprite sniperSprite;
 
+	public Image img;
 	// Use this for initialization
 	void Start () {
-		Image img = GetComponent<Image>();
-	
-		if (PlayerStats.SelectedClass == "Assault")
-			img.sprite = assaultSprite;
-		else if (PlayerStats.SelectedClass == "Tank")
-			img.sprite = tankSprite;
-		else
-			img.sprite = sniperSprite;	
+		img = GetComponent<Image>();
 	}
 
+	public void ChangeSprite(ClassType classType) {
+		if (classType == ClassType.Assault)
+			img.sprite = assaultSprite;
+		else if (classType == ClassType.Tank)
+			img.sprite = tankSprite;
+		else
+			img.sprite = sniperSprite;
+	}
 }

@@ -21,18 +21,18 @@ public class EnemyMelee : MonoBehaviour {
 			target = ai.target;
 			return;
 		}
-		
-		if (ai.inSight) {
+		PlayerStats playerStats;
+		if (ai.InSight(out playerStats)) {
 			if (Time.time > lastHit + 1f/hitRate) {
-				Hit ();
+				Hit (playerStats);
 				lastHit = Time.time;
 			}
 		}
 			
 	}
 	
-	void Hit () {
-		PlayerMaster.playerMaster.AdjustPlayerHealth (-damage);
+	void Hit (PlayerStats playerStats) {
+		playerStats.AdjustPlayerHealth (-damage);
 		//Debug.Log (PlayerStats.playerHealth);
 	}
 	

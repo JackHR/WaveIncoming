@@ -18,20 +18,17 @@ public class QualitySettingsMenu : MonoBehaviour {
 	private bool fullscreen = true;
 
 	void Awake () {
-		if (PlayerPrefs.GetInt ("firstLoad", 1) == 0) {
-			int _w = PlayerPrefs.GetInt ("resWidth", 800);
-			int _h = PlayerPrefs.GetInt ("resHeight", 600);
-			bool _f = (PlayerPrefs.GetInt ("fullscreen", 0) == 1 ) ? true : false;
+		/*
+		if (PlayerPrefs.GetInt (Strings.FirstLoad, 1) == 0) {
+
+			int _w = PlayerPrefs.GetInt (Strings.ResWidth, 600);
+			int _h = PlayerPrefs.GetInt (Strings.ResHeight, 400);
+			bool _f = PlayerPrefs.GetInt (Strings.Fullscreen, 0) == 1;
 			Screen.SetResolution ( _w, _h, _f );
 
 			Application.LoadLevel (Application.loadedLevel + 1);
 			return;
-		}
-
-		Screen.SetResolution ( 600, 400, false );
-		Screen.fullScreen = false;
-
-		PlayerPrefs.SetInt ("firstLoad", 0);
+		}*/
 	}
 
 	// Use this for initialization
@@ -76,15 +73,15 @@ public class QualitySettingsMenu : MonoBehaviour {
 				Resolution res = child.GetComponent<ResolutionElement>().res;
 
 				Screen.SetResolution ( res.width, res.height, fullscreen );
-				PlayerPrefs.SetInt ("resWidth", res.width);
-				PlayerPrefs.SetInt ("resHeight", res.height);
+				PlayerPrefs.SetInt (Strings.ResWidth, res.width);
+				PlayerPrefs.SetInt (Strings.ResHeight, res.height);
 				int _f = (fullscreen) ? 1 : 0;
-				PlayerPrefs.SetInt ("fullscreen", _f);
+				PlayerPrefs.SetInt (Strings.Fullscreen, _f);
 			}
 		}
 
 		QualitySettings.SetQualityLevel (qualityLevel);
 
-		Application.LoadLevel (Application.loadedLevel + 1);
+		Application.LoadLevel(Strings.MainMenu);
 	}
 }
